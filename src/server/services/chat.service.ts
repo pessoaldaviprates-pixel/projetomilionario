@@ -22,7 +22,7 @@ export async function assertChannelAccess(ctx: AuthContext, channelId: string) {
   const channel = await prisma.channel.findFirst({
     where: scopedId(ctx, channelId),
     select: {
-      id: true, kind: true, name: true, slug: true, isArchived: true, projectId: true,
+      id: true, kind: true, name: true, slug: true, topic: true, isArchived: true, projectId: true,
       members: { where: { membershipId: ctx.membershipId }, select: { id: true, isAdmin: true, lastReadAt: true } },
     },
   });
