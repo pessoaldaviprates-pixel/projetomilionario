@@ -14,7 +14,7 @@ export default async function MessagesLayout({ children }: { children: React.Rea
   const [channels, members] = await Promise.all([listChannels(ctx), listMemberOptions(ctx)]);
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)]">
+    <div className="flex h-full">
       <ChannelSidebar
         channels={channels}
         members={members.map((member) => ({

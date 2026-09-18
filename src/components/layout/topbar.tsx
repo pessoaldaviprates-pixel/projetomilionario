@@ -18,7 +18,7 @@ export interface TopbarProps {
 
 export function Topbar({ user, company, roleName, unreadNotifications, onOpenMenu }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-base/85 px-4 backdrop-blur-xl sm:px-5">
+    <header className="z-30 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-base/85 px-4 backdrop-blur-xl sm:px-5">
       <button
         type="button"
         onClick={onOpenMenu}

@@ -31,7 +31,7 @@ export function AppShell({ children, permissions, isOwner, user, company, roleNa
   };
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="flex h-dvh overflow-hidden">
       <Sidebar
         permissions={permissions}
         isOwner={isOwner}
@@ -49,7 +49,7 @@ export function AppShell({ children, permissions, isOwner, user, company, roleNa
           unreadNotifications={badges.notifications}
           onOpenMenu={() => setMenuOpen(true)}
         />
-        <main id="conteudo" className="flex-1">
+        <main id="conteudo" className="flex-1 overflow-y-auto scrollbar-thin">
           {children}
         </main>
       </div>
