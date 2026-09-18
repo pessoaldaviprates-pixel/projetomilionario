@@ -272,7 +272,10 @@ export function CalendarWorkspace({
                         <GripVertical className="mt-0.5 size-3.5 shrink-0 text-ink-faint" aria-hidden />
                       ) : null}
                       <div className="min-w-0 flex-1">
-                        <Link href={`/tarefas/${task.id}`} className="block truncate text-ink hover:text-brand">
+                        <Link
+                          href={`/tarefas/${task.id}`}
+                          className="flex min-h-6 items-center truncate py-0.5 text-ink hover:text-brand"
+                        >
                           {task.title}
                         </Link>
                         {task.priority === 'URGENT' || task.priority === 'HIGH' ? (
@@ -465,7 +468,7 @@ function EventChip({ item, compact }: { item: AgendaItemDto; compact?: boolean }
   const content = (
     <span
       className={cn(
-        'block truncate rounded px-1.5 py-0.5 text-[10px] leading-tight',
+        'flex min-h-6 items-center truncate rounded px-1.5 py-1 text-[10px] leading-tight',
         item.isDone ? 'line-through opacity-60' : '',
       )}
       style={{ backgroundColor: `${color}22`, color, borderLeft: `2px solid ${color}` }}

@@ -72,7 +72,10 @@ export default async function MarketingLayout({ children }: { children: React.Re
                   <ul className="space-y-2">
                     {group.links.map(([label, href]) => (
                       <li key={label}>
-                        <Link href={href!} className="text-sm text-ink-muted transition-colors hover:text-ink">
+                        <Link
+                          href={href!}
+                          className="inline-flex min-h-6 items-center py-1 text-sm text-ink-muted transition-colors hover:text-ink"
+                        >
                           {label}
                         </Link>
                       </li>

@@ -14,7 +14,7 @@ export default async function SettingsPage() {
 
   const shortcuts = [
     { href: '/configuracoes/perfil', label: 'Meu perfil', description: 'Nome, e-mail e preferências', icon: User, show: true },
-    { href: '/admin/cargos', label: 'Cargos e permissões', description: 'Quem pode fazer o quê', icon: Shield, show: ctx.can('roles.view') },
+    { href: '/admin/cargos', label: 'Cargos e permissões', description: 'Quem pode fazer o quê', icon: Shield, show: ctx.can('roles.manage') },
     { href: '/admin/assinatura', label: 'Assinatura', description: 'Plano, faturas e limites', icon: Wallet, show: ctx.can('billing.view') },
     { href: '/admin/seguranca', label: 'Segurança e logs', description: 'Auditoria e sessões', icon: Shield, show: ctx.can('audit.view') },
   ].filter((item) => item.show);

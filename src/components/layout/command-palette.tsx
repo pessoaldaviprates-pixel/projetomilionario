@@ -133,8 +133,12 @@ export function CommandPalette() {
         onClick={() => setOpen(true)}
         className="flex h-9 w-full max-w-md items-center gap-2.5 rounded-xl border border-line bg-surface px-3 text-sm text-ink-faint transition-colors hover:border-line-strong hover:text-ink-subtle"
       >
-        <Search className="size-4" aria-hidden />
-        <span className="flex-1 text-left">Buscar pessoas, tarefas, projetos…</span>
+        <Search className="size-4 shrink-0" aria-hidden />
+        {/* No celular o texto longo quebra em duas linhas e desalinha a barra. */}
+        <span className="flex-1 truncate text-left sm:hidden">Buscar…</span>
+        <span className="hidden flex-1 truncate text-left sm:block">
+          Buscar pessoas, tarefas, projetos…
+        </span>
         <kbd className="hidden rounded border border-line bg-surface-overlay px-1.5 py-0.5 font-sans text-[10px] text-ink-faint sm:inline">
           ⌘K
         </kbd>

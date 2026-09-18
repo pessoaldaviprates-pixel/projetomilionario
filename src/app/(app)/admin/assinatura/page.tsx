@@ -151,7 +151,8 @@ export default async function SubscriptionPage() {
           {payments.length === 0 ? (
             <p className="px-5 pb-5 text-sm text-ink-faint">Nenhum pagamento registrado ainda.</p>
           ) : (
-            <table className="w-full">
+            <div className="relative w-full overflow-x-auto scrollbar-thin">
+            <table className="w-full min-w-[520px]">
               <caption className="sr-only">Pagamentos da assinatura</caption>
               <thead>
                 <tr className="border-y border-line text-left">
@@ -185,6 +186,7 @@ export default async function SubscriptionPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </Card>
 

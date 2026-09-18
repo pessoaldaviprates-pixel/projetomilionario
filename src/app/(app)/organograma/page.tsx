@@ -36,7 +36,7 @@ export default async function OrgChartPage() {
             />
           </Card>
         ) : (
-          <Card className="overflow-x-auto p-6">
+          <Card className="relative overflow-x-auto p-6">
             <div className="flex min-w-max justify-center">
               <ul className="flex gap-6">
                 {roots.map((node) => (

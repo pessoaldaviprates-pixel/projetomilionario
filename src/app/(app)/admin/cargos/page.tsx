@@ -7,7 +7,9 @@ import { RolesManager } from './roles-manager';
 export const metadata: Metadata = { title: 'Cargos e permissões' };
 
 export default async function RolesPage() {
-  const ctx = await requirePermission('roles.view');
+  // Gerir cargos é ação administrativa. Quem tem apenas `roles.view` continua
+  // enxergando cargo e permissões no perfil das pessoas, mas não este painel.
+  const ctx = await requirePermission('roles.manage');
   const roles = await listRoles(ctx);
 
   return (

@@ -159,7 +159,8 @@ export function EmployeesTable({
             />
           </Card>
         ) : (
-          <Card className="overflow-x-auto p-0">
+          <Card className="p-0">
+            <div className="relative w-full overflow-x-auto scrollbar-thin">
             <table className="w-full min-w-[640px]">
               <caption className="sr-only">Funcionários da empresa</caption>
               <thead>
@@ -286,6 +287,7 @@ export function EmployeesTable({
                 })}
               </tbody>
             </table>
+            </div>
           </Card>
         )}
       </PageBody>

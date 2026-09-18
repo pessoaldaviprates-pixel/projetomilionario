@@ -255,8 +255,9 @@ export function FilesWorkspace({
             />
           </Card>
         ) : (
-          <Card className="overflow-hidden p-0">
-            <table className="w-full">
+          <Card className="p-0">
+            <div className="relative w-full overflow-x-auto scrollbar-thin">
+            <table className="w-full min-w-[520px]">
               <caption className="sr-only">Arquivos da empresa</caption>
               <thead>
                 <tr className="border-b border-line text-left">
@@ -311,6 +312,7 @@ export function FilesWorkspace({
                 })}
               </tbody>
             </table>
+            </div>
           </Card>
         )}
       </PageBody>

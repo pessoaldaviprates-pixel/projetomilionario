@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -27,4 +28,34 @@ export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDi
 
 export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('flex items-center gap-3 border-t border-line p-5', className)} {...props} />;
+}
+
+/**
+ * Link de ação no cabeçalho de um card ("Ver todas", "Agenda"…).
+ *
+ * Existe como componente para garantir o alvo de toque mínimo de 24px em
+ * todas as ocorrências — um link de 16px de altura é difícil de acertar no
+ * celular e reprova em WCAG 2.5.8.
+ */
+export function CardLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        'inline-flex min-h-6 shrink-0 items-center rounded px-1 text-xs font-medium text-brand',
+        'transition-colors hover:text-brand-glow hover:underline',
+        className,
+      )}
+    >
+      {children}
+    </Link>
+  );
 }

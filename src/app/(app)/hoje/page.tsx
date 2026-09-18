@@ -8,7 +8,7 @@ import { getTodayBoard } from '@/server/services/tasks.service';
 import { getAgenda } from '@/server/services/calendar.service';
 import { listPendingActions } from '@/server/services/ai.service';
 import { PageBody, PageHeader } from '@/components/layout/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardLink } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState, Progress } from '@/components/ui/misc';
@@ -111,9 +111,7 @@ export default async function TodayPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Prioridades do dia</CardTitle>
-                <Link href="/tarefas?minhas=1" className="text-xs font-medium text-brand hover:underline">
-                  Todas as tarefas
-                </Link>
+                <CardLink href="/tarefas?minhas=1">Todas as tarefas</CardLink>
               </CardHeader>
 
               {uniquePriority.length === 0 ? (

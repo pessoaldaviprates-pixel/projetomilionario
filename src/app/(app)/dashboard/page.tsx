@@ -14,7 +14,7 @@ import { getRecentActivity } from '@/server/services/metrics.service';
 import { PageBody, PageHeader } from '@/components/layout/page-header';
 import { StatCard } from '@/components/app/stat-card';
 import { TaskRow } from '@/components/app/task-row';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardLink } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -126,9 +126,7 @@ export default async function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Tarefas de hoje</CardTitle>
-                <Link href="/tarefas?minhas=1" className="text-xs font-medium text-brand hover:underline">
-                  Ver todas
-                </Link>
+                <CardLink href="/tarefas?minhas=1">Ver todas</CardLink>
               </CardHeader>
               {todayTasks.length === 0 ? (
                 <EmptyState
@@ -203,9 +201,7 @@ export default async function DashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Próximos compromissos</CardTitle>
-                <Link href="/agenda" className="text-xs font-medium text-brand hover:underline">
-                  Agenda
-                </Link>
+                <CardLink href="/agenda">Agenda</CardLink>
               </CardHeader>
               {upcoming.length === 0 ? (
                 <EmptyState
@@ -246,9 +242,7 @@ export default async function DashboardPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Avisos da empresa</CardTitle>
-                  <Link href="/avisos" className="text-xs font-medium text-brand hover:underline">
-                    Ver todos
-                  </Link>
+                  <CardLink href="/avisos">Ver todos</CardLink>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {announcements.map((announcement) => (

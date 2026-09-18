@@ -51,7 +51,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: 'Administração',
     items: [
       { href: '/admin', label: 'Painel', icon: ShieldCheck, permission: 'reports.view' },
-      { href: '/admin/cargos', label: 'Cargos', icon: Shield, permission: 'roles.view' },
+      { href: '/admin/cargos', label: 'Cargos', icon: Shield, permission: 'roles.manage' },
       { href: '/admin/assinatura', label: 'Assinatura', icon: Wallet, permission: 'billing.view' },
       { href: '/admin/seguranca', label: 'Segurança e logs', icon: Shield, permission: 'audit.view' },
       { href: '/configuracoes', label: 'Configurações', icon: Settings },
