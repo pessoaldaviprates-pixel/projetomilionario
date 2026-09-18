@@ -22,12 +22,30 @@ const prisma = new PrismaClient({ adapter });
 const DEMO_PASSWORD = 'Nexora@2026';
 const DEMO_COMPANY_SLUG = 'nexora-demo';
 
-/** Datas relativas a hoje, para a demo nunca parecer desatualizada. */
+/**
+ * Datas relativas a hoje, para a demo nunca parecer desatualizada.
+ *
+ * O horário é construído no fuso da aplicação (America/Sao_Paulo, UTC-3) e não
+ * no fuso do processo. Sem isso, um servidor em UTC gravaria 08:00 e a interface
+ * exibiria 05:00 — dado correto no banco, errado para quem lê.
+ */
+const APP_UTC_OFFSET_HOURS = 3;
 const now = new Date();
+
 function daysFromNow(days: number, hour = 9, minute = 0): Date {
-  const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, hour, minute, 0, 0);
-  return date;
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + days,
+      hour + APP_UTC_OFFSET_HOURS,
+      minute,
+      0,
+      0,
+    ),
+  );
 }
+
 function hoursAgo(hours: number): Date {
   return new Date(now.getTime() - hours * 3_600_000);
 }
@@ -330,7 +348,10 @@ async function seedDemoCompany(): Promise<void> {
     { title: 'Conciliação bancária de agosto', project: 'FIN', assignee: matheus, status: 'TODO' as const, priority: 'HIGH' as const, due: daysFromNow(-1, 18), tags: ['financeiro'] },
     { title: 'Atualizar base de conhecimento do suporte', project: null, assignee: bruno, status: 'TODO' as const, priority: 'LOW' as const, due: daysFromNow(10, 18), tags: ['suporte'] },
     { title: 'Revisar plano de contratação do 4º trimestre', project: null, assignee: ana, status: 'TODO' as const, priority: 'MEDIUM' as const, due: daysFromNow(12, 18), tags: ['pessoas'] },
-    { title: 'Definir metas do próximo trimestre', project: null, assignee: gabriel, status: 'TODO' as const, priority: 'HIGH' as const, due: daysFromNow(3, 18), tags: ['estratégia'] },
+    { title: 'Definir metas do próximo trimestre', project: null, assignee: gabriel, status: 'IN_PROGRESS' as const, priority: 'HIGH' as const, due: daysFromNow(0, 17), tags: ['estratégia'] },
+    { title: 'Aprovar orçamento de marketing', project: 'FIN', assignee: gabriel, status: 'TODO' as const, priority: 'URGENT' as const, due: daysFromNow(0, 12), tags: ['financeiro'] },
+    { title: 'Responder proposta do cliente Atlas', project: null, assignee: gabriel, status: 'TODO' as const, priority: 'HIGH' as const, due: daysFromNow(-1, 18), tags: ['comercial'] },
+    { title: 'Revisar apresentação do conselho', project: null, assignee: gabriel, status: 'TODO' as const, priority: 'MEDIUM' as const, due: daysFromNow(5, 18), tags: ['estratégia'] },
   ];
 
   const createdTasks: { id: string; title: string }[] = [];
@@ -476,6 +497,7 @@ async function seedDemoCompany(): Promise<void> {
   await prisma.timeBlock.createMany({
     data: [
       { companyId: company.id, membershipId: gabriel, title: 'Foco: metas do trimestre', startsAt: daysFromNow(0, 10, 30), endsAt: daysFromNow(0, 12), taskId: createdTasks[11]!.id },
+      { companyId: company.id, membershipId: gabriel, title: 'Foco: proposta Atlas', startsAt: daysFromNow(1, 9), endsAt: daysFromNow(1, 10, 30), taskId: createdTasks[13]!.id },
       { companyId: company.id, membershipId: gabriel, title: 'Revisar relatórios', startsAt: daysFromNow(0, 15), endsAt: daysFromNow(0, 16) },
     ],
   });
