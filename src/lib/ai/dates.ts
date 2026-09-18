@@ -87,14 +87,18 @@ export function parseNaturalDate(text: string, now = new Date()): ParsedDate | n
   }
 
   // 3. Relativos simples
+  //
+  // Atenção ao `\b` final: em JavaScript, `\b` compara classes ASCII, então
+  // "amanhã" seguido de fim de string NÃO produz fronteira (ã não é \w).
+  // Por isso usamos um lookahead Unicode explícito de "fim de palavra".
   if (/\bhoje\b/.test(normalized)) {
     return { date: atEndOfBusinessDay(now), matched: 'hoje', confidence: 0.95 };
   }
-  if (/\bamanh[ãa]\b/.test(normalized)) {
-    return { date: atEndOfBusinessDay(addDays(now, 1)), matched: 'amanhã', confidence: 0.95 };
-  }
-  if (/\bdepois de amanh[ãa]\b/.test(normalized)) {
+  if (/\bdepois de amanh[ãa](?![\p{L}\p{N}])/u.test(normalized)) {
     return { date: atEndOfBusinessDay(addDays(now, 2)), matched: 'depois de amanhã', confidence: 0.9 };
+  }
+  if (/\bamanh[ãa](?![\p{L}\p{N}])/u.test(normalized)) {
+    return { date: atEndOfBusinessDay(addDays(now, 1)), matched: 'amanhã', confidence: 0.95 };
   }
 
   // 4. "em N dias/semanas"
@@ -108,7 +112,7 @@ export function parseNaturalDate(text: string, now = new Date()): ParsedDate | n
 
   // 5. Dias da semana, com ou sem "próxima"
   const weekdayMatch = normalized.match(
-    /\b(pr[óo]xim[ao]\s+)?(domingo|segunda(?:-feira)?|ter[çc]a(?:-feira)?|quarta(?:-feira)?|quinta(?:-feira)?|sexta(?:-feira)?|s[áa]bado)\b/,
+    /\b(pr[óo]xim[ao]\s+)?(domingo|segunda(?:-feira)?|ter[çc]a(?:-feira)?|quarta(?:-feira)?|quinta(?:-feira)?|sexta(?:-feira)?|s[áa]bado)(?![\p{L}\p{N}])/u,
   );
   if (weekdayMatch) {
     const key = weekdayMatch[2]!;

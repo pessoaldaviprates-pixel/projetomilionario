@@ -1,0 +1,52 @@
+# Ambiente completo da Nexora para desenvolvimento e avaliação.
+#   docker compose up -d
+#   docker compose exec app npx prisma migrate deploy
+#   docker compose exec app npm run db:seed
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nexora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexora}
+      POSTGRES_DB: nexora
+      # Collation determinística evita diferenças de ordenação entre máquinas.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - nexora_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nexora -d nexora']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://nexora:${POSTGRES_PASSWORD:-nexora}@db:5432/nexora?schema=public
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      # Obrigatório em produção: gere com `openssl rand -base64 48`.
+      AUTH_SECRET: ${AUTH_SECRET:?defina AUTH_SECRET no arquivo .env}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      MAIL_DRIVER: ${MAIL_DRIVER:-console}
+      AI_PROVIDER: ${AI_PROVIDER:-heuristic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      BILLING_PROVIDER: ${BILLING_PROVIDER:-manual}
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    volumes:
+      - nexora_uploads:/app/storage/uploads
+
+volumes:
+  nexora_db:
+  nexora_uploads:

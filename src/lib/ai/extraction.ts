@@ -28,27 +28,40 @@ export interface ExtractedAction {
   rationale: string;
 }
 
-/** Verbos que indicam compromisso de execução. */
+/**
+ * Verbos que indicam compromisso de execução.
+ *
+ * As raízes cobrem as conjugações comuns em conversa de trabalho — "entregar",
+ * "entrega", "entrego", "entregue" — porque a mensagem real raramente vem no
+ * infinitivo ("Maria entrega o relatório até sexta").
+ */
 const COMMITMENT_PATTERNS = [
-  /\bprecisamos?\b/i,
-  /\bprecisa(?:mos)?\s+(?:de\s+)?/i,
+  /\bprecisa(?:mos|va|m)?\b/i,
   /\btemos que\b/i,
   /\bvamos\b/i,
-  /\bfica(?:r[áa])?\s+respons[áa]vel\b/i,
+  /\bfica(?:r[áa]|rei|mos)?\s+respons[áa]vel/i,
   /\bficou\s+de\b/i,
-  /\bvou\s+(?:fazer|entregar|preparar|enviar|revisar|criar|corrigir)\b/i,
-  /\bpode(?:ria)?\s+(?:fazer|entregar|preparar|enviar|revisar|criar|corrigir)\b/i,
-  /\bentregar\b/i,
-  /\bterminar\b/i,
-  /\bfinalizar\b/i,
-  /\bcorrigir\b/i,
-  /\bajustar\b/i,
-  /\brevisar\b/i,
-  /\bpreparar\b/i,
-  /\benviar\b/i,
-  /\bmarcar\b/i,
-  /\bagendar\b/i,
-  /\bnão esque[çc]a\b/i,
+  /\bassumo\b|\bassume\b|\bassumir\b/i,
+  /\bvou\s+\p{L}+/iu,
+  /\bpode(?:ria)?\s+\p{L}+/iu,
+
+  // Raízes verbais + terminações de presente, infinitivo e particípio.
+  /\bentreg(?:ar|a|o|am|amos|ue|ues)\b/i,
+  /\btermin(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bfinaliz(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bcorrig(?:ir|e|i|em|imos)\b/i,
+  /\bajust(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\brevis(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bprepar(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\benvi(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bmarc(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bagend(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bcri(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bresolv(?:er|e|o|em|emos|i|eu)\b/i,
+  /\bvalid(?:ar|a|o|am|amos|ei|ou)\b/i,
+  /\bdocument(?:ar|a|o|am|amos|ei|ou)\b/i,
+
+  /\bn[ãa]o esque[çc]a/i,
   /\blembrar de\b/i,
 ];
 
@@ -60,7 +73,7 @@ const MEETING_PATTERNS = [
 const REMINDER_PATTERNS = [/\blembr(?:ar|ete)\b/i, /\bn[ãa]o esque[çc]a\b/i];
 
 const URGENCY_PATTERNS: { pattern: RegExp; priority: ExtractedAction['priority'] }[] = [
-  { pattern: /\b(urgente|urg[êe]ncia|imediato|agora|asap|cr[íi]tico|parad[oa])\b/i, priority: 'URGENT' },
+  { pattern: /\b(urgente|urg[êe]ncia|imediato|agora|asap|cr[íi]tico|parad[oa])(?![\p{L}\p{N}])/iu, priority: 'URGENT' },
   { pattern: /\b(prioridade alta|importante|prioritário|prioritario|o quanto antes)\b/i, priority: 'HIGH' },
   { pattern: /\b(quando (?:der|puder)|sem pressa|baixa prioridade)\b/i, priority: 'LOW' },
 ];
@@ -122,7 +135,10 @@ export function buildTitle(sentence: string, due: ParsedDate | null): string {
   }
 
   title = title
-    .replace(/^(?:precisamos?|precisa|temos que|vamos|voc[êe] pode|poderia|pode)\s+(?:de\s+)?/i, '')
+    .replace(
+      /^(?:precisa(?:mos|va|m)?|temos que|vamos|voc[êe] pode|poderia|pode|eu)\s+(?:de\s+)?/i,
+      '',
+    )
     .replace(/\s{2,}/g, ' ')
     .replace(/[\s,;:.!?-]+$/g, '')
     .trim();

@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Tipos, testes e build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nexora
+          POSTGRES_PASSWORD: nexora
+          POSTGRES_DB: nexora_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U nexora"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://nexora:nexora@localhost:5432/nexora_test?schema=public
+      AUTH_SECRET: chave-de-teste-com-mais-de-32-bytes-para-o-ci-passar
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gerar cliente Prisma
+        run: npx prisma generate
+
+      - name: Aplicar migrações
+        run: npx prisma migrate deploy
+
+      - name: Verificar tipos
+        run: npm run typecheck
+
+      - name: Executar testes
+        run: npm test
+
+      - name: Build de produção
+        run: npx next build
