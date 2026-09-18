@@ -144,13 +144,18 @@ export function TaskFormDialog({
             </Select>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Select name="projectId" label="Projeto" defaultValue={defaultProjectId ?? ''} className="sm:col-span-1">
-              <option value="">Sem projeto</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>{project.name}</option>
-              ))}
-            </Select>
+          <div className={projects.length > 0 ? 'grid gap-4 sm:grid-cols-3' : 'grid gap-4 sm:grid-cols-2'}>
+            {projects.length > 0 ? (
+              <Select name="projectId" label="Projeto" defaultValue={defaultProjectId ?? ''}>
+                <option value="">Sem projeto</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </Select>
+            ) : (
+              // Dentro de um projeto não há o que escolher: o vínculo já está definido.
+              <input type="hidden" name="projectId" value={defaultProjectId ?? ''} />
+            )}
 
             <Input name="dueAt" type="date" label="Prazo" error={errors.dueAt} />
             <Input name="dueTime" type="time" label="Hora" defaultValue="18:00" />
