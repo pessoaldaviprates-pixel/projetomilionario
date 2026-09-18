@@ -232,7 +232,7 @@ export async function createTask(ctx: AuthContext, input: CreateTaskInput) {
     await syncTaskEvent(ctx.companyId, task.id);
   }
 
-  if (input.projectId) await recalculateProjectProgress(input.projectId);
+  if (input.projectId) await recalculateProjectProgress(ctx.companyId, input.projectId);
 
   await auditFromContext(ctx, {
     action: 'task.created',
@@ -334,7 +334,7 @@ export async function updateTask(ctx: AuthContext, taskId: string, input: Partia
   await syncTaskEvent(ctx.companyId, taskId);
 
   const affectedProjects = new Set([current.projectId, task.projectId].filter(Boolean) as string[]);
-  for (const projectId of affectedProjects) await recalculateProjectProgress(projectId);
+  for (const projectId of affectedProjects) await recalculateProjectProgress(ctx.companyId, projectId);
 
   await auditFromContext(ctx, {
     action: isCompleting ? 'task.completed' : 'task.updated',
@@ -400,7 +400,7 @@ export async function moveTask(
     },
   });
 
-  if (task.projectId) await recalculateProjectProgress(task.projectId);
+  if (task.projectId) await recalculateProjectProgress(ctx.companyId, task.projectId);
   publish('task.updated', ctx.companyId, { id: taskId, status });
 }
 
@@ -414,7 +414,7 @@ export async function deleteTask(ctx: AuthContext, taskId: string): Promise<void
   await prisma.task.update({ where: { id: taskId }, data: { deletedAt: new Date() } });
   await prisma.calendarEvent.deleteMany({ where: { companyId: ctx.companyId, taskId } });
 
-  if (task.projectId) await recalculateProjectProgress(task.projectId);
+  if (task.projectId) await recalculateProjectProgress(ctx.companyId, task.projectId);
 
   await auditFromContext(ctx, {
     action: 'task.deleted',
@@ -460,6 +460,8 @@ export async function addComment(ctx: AuthContext, taskId: string, body: string)
 }
 
 export async function toggleChecklistItem(ctx: AuthContext, taskId: string, itemId: string, isDone: boolean) {
+  // A tarefa é validada contra o tenant primeiro; o item fica restrito a ela,
+  // então não existe caminho para tocar no checklist de outra empresa.
   const task = await prisma.task.findFirst({ where: scopedId(ctx, taskId), select: { id: true } });
   if (!task) throw new NotFoundError('Tarefa não encontrada.');
 
@@ -516,15 +518,25 @@ export async function syncTaskEvent(companyId: string, taskId: string): Promise<
   });
 }
 
-/** Progresso do projeto = tarefas concluídas / tarefas ativas. */
-export async function recalculateProjectProgress(projectId: string): Promise<void> {
+/**
+ * Progresso do projeto = tarefas concluídas / tarefas ativas.
+ *
+ * Recebe `companyId` e escopa a contagem e a escrita. Os chamadores atuais já
+ * passam um projeto validado, mas a função não deve depender disso: sem o
+ * escopo próprio, um chamador futuro poderia gravar progresso no projeto de
+ * outro tenant.
+ */
+export async function recalculateProjectProgress(companyId: string, projectId: string): Promise<void> {
   const [total, done] = await Promise.all([
-    prisma.task.count({ where: { projectId, deletedAt: null, status: { not: 'CANCELED' } } }),
-    prisma.task.count({ where: { projectId, deletedAt: null, status: 'DONE' } }),
+    prisma.task.count({ where: { companyId, projectId, deletedAt: null, status: { not: 'CANCELED' } } }),
+    prisma.task.count({ where: { companyId, projectId, deletedAt: null, status: 'DONE' } }),
   ]);
 
   const progress = total === 0 ? 0 : Math.round((done / total) * 100);
-  await prisma.project.update({ where: { id: projectId }, data: { progress } }).catch(() => undefined);
+
+  await prisma.project
+    .updateMany({ where: { id: projectId, companyId }, data: { progress } })
+    .catch(() => undefined);
 }
 
 /** Agenda do dia: o que a pessoa precisa resolver hoje. */

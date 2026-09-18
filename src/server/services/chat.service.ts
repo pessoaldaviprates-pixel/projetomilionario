@@ -60,6 +60,8 @@ export async function listChannels(ctx: AuthContext) {
   });
 
   // Não lidas por canal, em uma query agregada por canal (não N+1 por mensagem).
+  // Os canais já vieram filtrados por `scoped(ctx)`, então contar por
+  // `channel.id` permanece dentro do tenant.
   const unreadCounts = await Promise.all(
     channels.map(async (channel) => {
       const lastReadAt = channel.members[0]?.lastReadAt;
