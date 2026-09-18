@@ -1,18 +1,19 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { NexoraLogo } from '@/components/brand/logo';
-import { getUserContext } from '@/lib/auth/context';
 
 /**
  * Layout das telas de conta.
  * Duas colunas no desktop (marca à esquerda, formulário à direita); no mobile
  * a coluna de marca vira um cabeçalho compacto — não é a versão desktop reduzida.
  */
+/**
+ * Layout das telas de conta.
+ *
+ * O redirecionamento de quem já está logado fica em CADA página (login,
+ * cadastro, recuperação) e não aqui: `/convite` e `/verificar-email` vivem
+ * neste mesmo grupo e precisam funcionar para quem já tem sessão.
+ */
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
-  // Quem já está autenticado não vê tela de login.
-  const ctx = await getUserContext();
-  if (ctx) redirect(ctx.activeCompanyId ? '/dashboard' : '/onboarding');
-
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
       <aside className="relative hidden overflow-hidden border-r border-line bg-surface lg:flex lg:flex-col lg:justify-between lg:p-12">

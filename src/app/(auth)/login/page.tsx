@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { getUserContext } from '@/lib/auth/context';
 import { LoginForm } from './login-form';
 
 export const metadata: Metadata = { title: 'Entrar' };
@@ -10,6 +12,10 @@ export default async function LoginPage({
   searchParams: Promise<{ convite?: string; criada?: string }>;
 }) {
   const params = await searchParams;
+
+  // Quem já está autenticado (e sem convite pendente) vai direto para o produto.
+  const ctx = await getUserContext();
+  if (ctx && !params.convite) redirect(ctx.activeCompanyId ? '/dashboard' : '/onboarding');
 
   return (
     <div className="animate-slide-up">

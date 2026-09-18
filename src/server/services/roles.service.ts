@@ -112,7 +112,7 @@ export async function createRole(ctx: AuthContext, input: RoleInput) {
   return role;
 }
 
-export async function updateRole(ctx: AuthContext, roleId: string, input: RoleInput) {
+export async function updateRole(ctx: AuthContext, roleId: string, input: Partial<RoleInput>) {
   assertPermission(ctx, 'roles.manage');
 
   const current = await prisma.role.findFirst({ where: scopedId(ctx, roleId) });

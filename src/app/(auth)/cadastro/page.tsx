@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { getUserContext } from '@/lib/auth/context';
 import { RegisterForm } from './register-form';
 
 export const metadata: Metadata = { title: 'Criar conta' };
@@ -10,6 +12,10 @@ export default async function RegisterPage({
   searchParams: Promise<{ convite?: string; plano?: string }>;
 }) {
   const params = await searchParams;
+
+  // Quem já está autenticado (e sem convite pendente) vai direto para o produto.
+  const ctx = await getUserContext();
+  if (ctx && !params.convite) redirect(ctx.activeCompanyId ? '/dashboard' : '/onboarding');
 
   return (
     <div className="animate-slide-up">
