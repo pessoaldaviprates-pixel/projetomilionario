@@ -1,0 +1,181 @@
+@import 'tailwindcss';
+
+/*
+ * NEXORA — Sistema de design
+ *
+ * Identidade: escuro, profundo, tecnológico. Azul elétrico como única cor de
+ * ação; roxo e verde aparecem só como acento semântico. Nada de gradiente
+ * decorativo em superfície de trabalho — o brilho fica reservado para a marca
+ * e para o estado ativo.
+ */
+
+@theme {
+  /* ── Superfícies ─────────────────────────────────────────────────────── */
+  --color-base: #05070d;
+  --color-surface: #0a0f1a;
+  --color-surface-raised: #0e1524;
+  --color-surface-overlay: #121b2e;
+  --color-surface-hover: #16203a;
+
+  /* ── Bordas ──────────────────────────────────────────────────────────── */
+  --color-line: #1b2436;
+  --color-line-strong: #27324a;
+
+  /* ── Texto ───────────────────────────────────────────────────────────── */
+  --color-ink: #f2f6fd;
+  --color-ink-muted: #b8c4d9;
+  --color-ink-subtle: #7a8aa3;
+  --color-ink-faint: #5b6b85;
+
+  /* ── Marca ───────────────────────────────────────────────────────────── */
+  --color-brand: #2e7dff;
+  --color-brand-strong: #1d63e0;
+  --color-brand-soft: #16325c;
+  --color-brand-glow: #4f9dff;
+  --color-brand-deep: #0b2a5e;
+
+  /* ── Semântica ───────────────────────────────────────────────────────── */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+  --color-accent: #8b5cf6;
+
+  /* ── Tipografia ──────────────────────────────────────────────────────── */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ── Raios ───────────────────────────────────────────────────────────── */
+  --radius-card: 0.875rem;
+
+  /* ── Animações ───────────────────────────────────────────────────────── */
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-slide-up: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scale-in: scale-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Base
+ * ───────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * Foco visível é requisito de acessibilidade, não enfeite: o anel aparece
+   * para navegação por teclado em TODOS os elementos interativos.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-brand) 35%, transparent);
+    color: var(--color-ink);
+  }
+
+  /* Respeita quem configurou o sistema para menos movimento. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border-radius: 999px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-ink-faint);
+  }
+
+  /* Conteúdo lido apenas por leitores de tela. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Brilho de marca — usado só em hero e logo, nunca em superfície de trabalho. */
+  .brand-glow {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-brand) 30%, transparent),
+      0 8px 32px -8px color-mix(in oklab, var(--color-brand) 45%, transparent);
+  }
+
+  .grid-backdrop {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--color-line) 60%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--color-line) 60%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+}

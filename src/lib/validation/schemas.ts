@@ -6,7 +6,7 @@
  * passar por aqui.
  */
 import { z } from 'zod';
-import { PASSWORD_MIN_LENGTH } from '@/lib/auth/password';
+import { PASSWORD_MIN_LENGTH } from '@/lib/auth/password-policy';
 
 // ── Primitivos ──────────────────────────────────────────────────────────────
 
