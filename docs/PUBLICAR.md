@@ -1,102 +1,92 @@
-# Do banco até o ar
+# Do zero até no ar, com segurança
 
-Passo a passo para sair do computador local e chegar num endereço que
-qualquer pessoa abre. Feito para ser seguido **num computador** — a
-parte do banco precisa de terminal.
+Um caminho só, na ordem. Cada passo explica **por que** existe — porque
+quando você entender o porquê, vai saber decidir sozinho quando algo
+fugir do escrito.
 
-Tudo aqui foi **testado de verdade** antes de ser escrito, num Postgres
-de mentira mas real: `npm install`, `prisma migrate deploy`,
-`npm run db:seed`, `npm run build` e `npm test`. Onde o resultado
-importa, ele está anotado.
-
----
-
-## O que já funciona (conferido, não prometido)
-
-| conferência | resultado |
-|---|---|
-| `npm install` | passou |
-| `npm test` | **76 testes, 7 arquivos, todos passaram** |
-| TypeScript | passou |
-| `npm run build` **sem banco** | **FALHA** — ver o aviso abaixo |
-| `npm run build` **com banco migrado** | passou |
-| `npm run db:seed` | passou (3 planos + empresa de demonstração) |
-
-### O aviso que evita o erro da primeira vez
-
-O build **não passa sem um banco que exista e já tenha as tabelas**.
-
-O motivo: a página `/planos` é gerada durante o build e consulta a
-tabela `Plan`. Sem banco alcançável, o build morre com
-`PrismaClientKnownRequestError` e a mensagem não deixa óbvio que o
-problema é esse.
-
-Por isso a ordem aqui é **banco primeiro, deploy depois**. Não é
-preferência — é obrigação.
+Tudo aqui foi testado contra um Postgres de verdade antes de ser
+escrito: `npm install`, as migrações, o seed, o build e os 76 testes.
+Onde o resultado importa, ele está anotado.
 
 ---
 
-## Passo 1 — O banco (10 minutos)
+# Parte 1 — O banco e o link
 
-Qualquer Postgres hospedado serve. Os dois com plano grátis que
-funcionam bem com a Vercel:
+## Por que o banco vem primeiro
 
-- **Neon** (`neon.com`) — mais simples, liga direto no GitHub
-- **Supabase** (`supabase.com`) — mais completo, tem editor de SQL no site
+Parece natural publicar o site e depois ligar o banco. **Aqui isso não
+funciona, e o erro que aparece não explica o motivo.**
 
-1. Criar conta e criar um projeto
-2. Copiar a **connection string** — começa com `postgresql://`
-3. Guardar num lugar seguro. Ela dá acesso total ao banco
+A página de preços (`/planos`) é montada **durante o build**, não quando
+alguém abre. Para montá-la, o Next.js pergunta ao banco quais planos
+existem. Se o banco não existir, ou existir mas estiver vazio de
+tabelas, o build morre com `PrismaClientKnownRequestError` — uma
+mensagem que não diz "faltou o banco".
 
-> **Neon:** use a string com `-pooler` no nome quando for para a Vercel.
-> A Vercel abre e fecha muita conexão, e sem o pooler o banco recusa
-> depois de um tanto delas.
+Por isso a ordem é: **banco → tabelas → site**. Não é preferência, é a
+única ordem que funciona.
 
-## Passo 2 — Criar as tabelas e os planos
+## Passo 1 — Criar o banco
+
+Vá em **neon.com**, entre com o GitHub e crie um projeto.
+
+Copie a **connection string**. Ela começa com `postgresql://` e parece
+isto:
+
+```
+postgresql://usuario:senha@ep-algo-123.sa-east-1.aws.neon.tech/neondb?sslmode=require
+```
+
+Duas coisas sobre ela:
+
+**Ela é uma senha.** Quem tiver essa linha lê, muda e apaga tudo — de
+todas as empresas clientes. Nunca mande por WhatsApp, nunca ponha num
+arquivo que vá para o GitHub.
+
+**Escolha a versão com `-pooler` no endereço**, se o Neon oferecer. A
+Vercel abre e fecha conexão o tempo todo, e sem o pooler o banco começa
+a recusar depois de um tanto delas — o sintoma é o site funcionar e de
+repente dar erro sem motivo aparente.
+
+## Passo 2 — Criar as tabelas
 
 No seu computador, dentro da pasta do projeto:
 
 ```sh
 npm install
 
-# aponta para o banco novo (a string do Passo 1)
-export DATABASE_URL="postgresql://...seu banco..."
+export DATABASE_URL="postgresql://...a sua string..."
 
-npm run db:deploy    # cria as 47 tabelas
+npm run db:deploy
 ```
 
-Agora os **planos**, que a tela de preços precisa para não vir vazia:
+Isso cria as 47 tabelas. Demora poucos segundos.
+
+`db:deploy` só aplica o que falta. Rodar de novo não quebra nada nem
+apaga nada — é seguro repetir sempre.
+
+## Passo 3 — Criar os planos
+
+A tela de preços lê os planos do banco. Sem isso ela vem vazia.
+
+**Antes de rodar, leia a Parte 3 deste documento.** O comando abaixo
+cria um administrador da plataforma com senha que está escrita no código
+— e o seu repositório é público. Rodar isso sem entender é o jeito mais
+rápido de entregar o sistema.
 
 ```sh
 npm run db:seed
 ```
 
-### ⚠ Leia antes de rodar o seed em produção
+Ele cria: os 3 planos, um administrador da plataforma
+(`admin@nexora.app`) e uma empresa de demonstração com dados de
+exemplo.
 
-O `prisma/seed.ts` cria, com **senha escrita dentro do código**:
+Só pode rodar **uma vez**. Ele usa `create` em 23 lugares e `upsert` em
+só 3, então na segunda vez quebra por chave repetida. É por isso que ele
+**não** entra no comando de build.
 
-- `admin@nexora.app` — **administrador da plataforma** (manda em tudo)
-- `gabriel@nexora.app` — empresa de demonstração com dados de exemplo
-
-A senha dos dois é `Nexora@2026`, e **este repositório é público**:
-qualquer pessoa abre o arquivo no GitHub e lê a senha.
-
-Rodar o seed inteiro no banco de produção é **entregar a plataforma**.
-
-Três saídas, da mais rápida para a melhor:
-
-1. Rodar o seed e, **antes de divulgar o endereço**, entrar como
-   `admin@nexora.app` e trocar a senha. Depois apagar a empresa de
-   demonstração.
-2. Rodar só a parte dos planos, comentando o resto do `seed.ts`.
-3. Mudar o `DEMO_PASSWORD` e o e-mail do administrador antes de rodar —
-   e não commitar a senha nova.
-
-O seed **não pode rodar duas vezes**: ele usa `create` em 23 lugares e
-`upsert` em só 3. Na segunda vez ele quebra por chave repetida. É por
-isso que ele **não** entra no comando de build.
-
-## Passo 3 — Conferir no seu computador antes de subir
+## Passo 4 — Conferir antes de subir
 
 ```sh
 export AUTH_SECRET="$(openssl rand -hex 32)"
@@ -104,121 +94,250 @@ npm run build
 npm test
 ```
 
-Se os dois passarem aqui, passam na Vercel. Se falharem, é **muito**
-mais fácil consertar no seu terminal do que lendo log de deploy.
+Se passarem aqui, passam na Vercel. Se falharem, consertar no seu
+terminal é muito mais fácil do que garimpar log de deploy.
 
-## Passo 4 — Vercel
+Resultado esperado: build com sucesso e **76 testes passando**.
 
-1. `vercel.com` → entrar com o GitHub → **Add New Project**
+## Passo 5 — Vercel
+
+1. **vercel.com** → entrar com o GitHub → **Add New Project**
 2. Escolher `projetomilionario`
-3. Em **Root Directory**, deixar como está
-4. **Antes de apertar Deploy**, os dois ajustes abaixo
+3. **Não apertar Deploy ainda** — faltam dois ajustes
 
-### 4a. Build Command — o passo que ninguém adivinha
+### 5a. O Build Command
 
-Em *Build and Output Settings*, ligar o **Override** e pôr:
+Em *Build and Output Settings*, ligue o **Override** e ponha:
 
 ```
 npx prisma migrate deploy && npm run build
 ```
 
-É isso que aplica as migrações **antes** de buildar. Como
-`migrate deploy` só aplica o que falta, pode rodar em todo deploy sem
-medo — diferente do seed.
+**Por que:** toda vez que você publicar uma versão nova que mexeu no
+banco, as tabelas precisam ser atualizadas antes do site subir. Essa
+linha faz isso sozinha. Como `migrate deploy` só aplica o que falta,
+pode rodar em todo deploy sem risco.
 
-### 4b. As variáveis de ambiente
+O seed **não** entra aqui — ele não pode repetir.
 
-Obrigatórias — sem elas o app **nem sobe** (o `src/lib/env.ts` recusa):
+### 5b. As variáveis de ambiente
 
 | nome | valor |
 |---|---|
 | `DATABASE_URL` | a string do Passo 1 |
-| `AUTH_SECRET` | 32+ caracteres aleatórios. Gere com `openssl rand -hex 32` |
+| `AUTH_SECRET` | gere com `openssl rand -hex 32` |
 | `APP_URL` | `https://seu-projeto.vercel.app` |
 
-O `AUTH_SECRET` é a chave que assina as sessões. Em produção o código
-**recusa** o valor de exemplo e qualquer coisa com menos de 32
-caracteres — de propósito. Quem tiver essa chave entra como qualquer
-pessoa.
+Sem as duas primeiras o app **nem sobe** — o `src/lib/env.ts` recusa
+iniciar, de propósito.
 
-O resto tem padrão e pode ficar de fora por enquanto.
+**O que é o `AUTH_SECRET`:** é a chave que assina as sessões. Quando
+alguém entra, o servidor cria um crachá e assina com ela. Se você mudar
+a chave, todo mundo cai e precisa entrar de novo. **Se ela vazar,
+qualquer pessoa consegue fabricar um crachá de qualquer usuário** — e
+não existe aviso, não existe log, não dá para perceber.
 
-5. **Deploy.** Uns 3 a 5 minutos.
+Trate ela como a chave do cofre.
+
+4. **Deploy.** Três a cinco minutos.
 
 ---
 
-## O que vai funcionar no link, e o que não vai
+# Parte 2 — O que já está seguro (e você não precisa mexer)
 
-**Funciona:** criar conta, criar empresa, convidar gente, chat com
-canais e diretas, tarefas, kanban, projetos, reuniões, agenda,
-organograma, avisos, notificações, busca global.
+Antes da lista do que fazer, vale saber o que **já está bem feito**.
+Isso importa: segurança é onde a gente se cansa, e saber onde não
+precisa olhar economiza a energia para onde precisa.
 
-**Não funciona ainda — e é esperado, não é defeito:**
+## As senhas estão guardadas do jeito certo
 
-| o quê | por quê | onde conserta |
+Ninguém guarda senha. O que fica no banco é um **hash** — um resultado
+matemático que não tem volta. O sistema usa **bcrypt com custo 12**.
+
+O "custo 12" quer dizer que calcular um hash é **deliberadamente lento**
+(uns 250 milissegundos). Para você entrar, um quarto de segundo não faz
+diferença. Para quem roubou o banco e quer testar bilhões de senhas, é a
+diferença entre horas e séculos.
+
+**Na prática:** se alguém roubar o seu banco inteiro, as senhas dos seus
+clientes continuam protegidas. É a coisa mais importante desta lista.
+
+## Cada senha tem um tempero diferente
+
+Duas pessoas com a senha `123456` geram hashes **diferentes** no banco.
+Isso impede o ataque clássico de olhar quais usuários têm a mesma senha,
+e impede tabelas prontas de consulta. Tem teste cobrindo isso.
+
+## A sessão não dá para roubar do banco
+
+O crachá de sessão é gerado com aleatoriedade de verdade
+(`randomBytes`) e o banco guarda **só o hash dele**. Quem roubar o banco
+leva os hashes — e hash de sessão não serve para entrar.
+
+## O cookie está trancado
+
+```
+httpOnly: true    → JavaScript da página não consegue ler o cookie
+sameSite: 'lax'   → outro site não consegue usar o seu cookie
+secure: produção  → só trafega por https
+```
+
+O `httpOnly` é o que impede o ataque mais comum da web: alguém injeta um
+script na página e manda o seu cookie embora. Com ele ligado, o script
+não enxerga o cookie.
+
+## A conta trava sozinha depois de erros
+
+Quem erra a senha várias vezes tem a conta bloqueada por um tempo
+(`failedLoginCount` e `lockedUntil`). E — isto é o detalhe que muita
+gente erra — **esse controle fica no banco**, não na memória do
+servidor. Então funciona mesmo com a Vercel ligando e desligando
+servidores o tempo todo.
+
+É essa a defesa que realmente protege contra alguém ficar tentando
+senhas da sua conta.
+
+## Não dá para descobrir quais e-mails existem
+
+Quando alguém tenta entrar com um e-mail que não existe, o sistema
+**gasta o mesmo tempo** que gastaria com um que existe. Sem isso, dava
+para descobrir a lista de clientes cronometrando as respostas. Esse
+cuidado está escrito no código, de propósito.
+
+---
+
+# Parte 3 — O que VOCÊ precisa fazer
+
+O código está bem feito. **Os riscos que sobraram são todos
+operacionais** — coisas fora do código, que só você pode resolver.
+
+Estão em ordem de quanto machucam.
+
+## 1. O administrador da plataforma com senha pública 🔴
+
+**Este é o mais grave, e é grave de verdade.**
+
+O `prisma/seed.ts` cria o usuário `admin@nexora.app` — o
+**administrador da plataforma**, que manda em todas as empresas — com a
+senha `Nexora@2026`. Essa senha está **escrita dentro do arquivo**.
+
+E o seu repositório é **público**. Qualquer pessoa no mundo abre
+`prisma/seed.ts` no GitHub e lê a senha.
+
+Se você rodar o seed em produção e não fizer nada, **o seu sistema está
+aberto** — não "vulnerável", aberto. É só digitar.
+
+**O que fazer, e faça antes de mandar o link para qualquer pessoa:**
+
+1. Entre como `admin@nexora.app` com `Nexora@2026`
+2. Troque a senha por uma longa e única
+3. Apague a empresa de demonstração e o usuário `gabriel@nexora.app`
+4. Se puder, troque também o e-mail do administrador — porque o endereço
+   também é público
+
+**Melhor ainda:** antes de rodar o seed em produção, abra o
+`prisma/seed.ts`, mude o `DEMO_PASSWORD` e o e-mail do administrador, e
+**não commite** essa mudança.
+
+## 2. O `AUTH_SECRET` 🔴
+
+**Nunca** ponha num arquivo que vá para o GitHub. Ele mora só nas
+variáveis da Vercel.
+
+**Use um diferente do que usou para testar.** Se um dia o de teste
+aparecer num log, numa captura de tela ou numa conversa, o de produção
+continua intacto.
+
+Se desconfiar que vazou: gere outro e troque na Vercel. Todo mundo cai
+da sessão e entra de novo — chato por cinco minutos, e resolve.
+
+## 3. O banco só aceita quem você deixar 🟠
+
+No painel do Neon, procure as restrições de rede (*IP Allow*).
+
+Por padrão, quem tiver a connection string conecta **de qualquer lugar
+do mundo**. Se der para limitar aos endereços da Vercel, limite. É uma
+tranca a mais para o caso de a string vazar.
+
+## 4. Ligue o backup e teste a volta 🟠
+
+"Ser invadido" inclui **perder tudo**. Pode ser um ataque, pode ser um
+comando errado seu às duas da manhã.
+
+O Neon tem restauração para um ponto no tempo. Ligue e escolha o maior
+período que o seu plano permitir.
+
+**E teste restaurar uma vez.** Backup que ninguém nunca restaurou não é
+backup — é esperança. Você só descobre que não funciona no dia em que
+precisa.
+
+## 5. Proteja a sua própria conta 🟠
+
+Você é o alvo mais valioso do sistema: quem entra como você entra em
+tudo.
+
+- **GitHub com 2FA ligado.** Se invadirem o seu GitHub, mudam o código e
+  a Vercel publica sozinha.
+- **Vercel com 2FA ligado.** Lá dentro estão o `AUTH_SECRET` e o
+  `DATABASE_URL` à mostra.
+- **Senha diferente em cada um.** Use um gerenciador de senhas.
+
+De nada adianta bcrypt custo 12 se alguém entra pelo seu e-mail.
+
+## 6. Nunca ponha segredo no código 🟠
+
+A regra: **se está no repositório, considere público.** Repositório
+privado vira público por engano, e o histórico do Git guarda tudo — até
+o que você apagou depois.
+
+Segredo mora **só** nas variáveis de ambiente da Vercel.
+
+Antes de cada `git push`, olhe o que está indo. Se enxergar algo que
+parece chave, senha ou string de conexão, **pare**.
+
+## 7. Depois do lançamento: 2FA para os clientes 🟡
+
+O `ROADMAP.md` marca o 2FA como preparado mas não implementado — o campo
+`twoFactorSecret` já existe no banco.
+
+É a **maior melhoria de segurança que ainda cabe**, e a que empresa
+grande pergunta na primeira reunião. Não precisa estar pronto no
+lançamento, mas ponha na lista logo depois.
+
+## 8. Depois do lançamento: limitador compartilhado 🟡
+
+O limitador de tentativas hoje é **em memória**. Na Vercel, cada
+servidor tem a memória dele, e eles nascem e morrem o tempo todo — então
+o limite vale menos do que parece.
+
+Isso **não** é urgente, porque a defesa que importa (o bloqueio da conta
+por senha errada) está no banco e funciona certo. Mas quando o sistema
+crescer, troque por **Upstash Redis** — a interface `RateLimiter` já foi
+escrita para isso, é trocar a implementação sem mexer em quem chama.
+
+---
+
+# A lista final, antes de mandar o link para alguém
+
+- [ ] Banco criado e migrado
+- [ ] `admin@nexora.app` com senha trocada — ou apagado
+- [ ] Empresa de demonstração apagada
+- [ ] `AUTH_SECRET` de produção, diferente do de teste, só na Vercel
+- [ ] Nenhuma chave ou senha dentro do repositório
+- [ ] Backup ligado no Neon, e restaurado uma vez para testar
+- [ ] 2FA no seu GitHub e na sua Vercel
+- [ ] Entrar no link de um celular que nunca abriu o sistema
+
+---
+
+# O que ainda não funciona no link (e não é defeito)
+
+| o quê | por quê | onde se conserta |
 |---|---|---|
-| E-mail não chega | `MAIL_DRIVER=console` — o e-mail só aparece no log | `src/lib/mail/index.ts` |
-| Upload se perde | `STORAGE_DRIVER=local` grava em disco, e **a Vercel apaga o disco a cada deploy** | `src/lib/storage/index.ts` |
+| E-mail não chega | `MAIL_DRIVER=console` — só escreve no log | `src/lib/mail/index.ts` |
+| Upload se perde | `STORAGE_DRIVER=local`, e a Vercel apaga o disco a cada deploy | `src/lib/storage/index.ts` |
 | Pagamento não cobra | `BILLING_PROVIDER=manual` | `src/lib/billing/gateway.ts` |
 
-O e-mail é o mais urgente dos três: **sem ele ninguém confirma conta
-nem recupera senha**. Quem esquecer a senha perde o acesso para sempre.
-
----
-
-## Depois do link: a ordem que eu seguiria
-
-**1. E-mail** (meio dia) — conta no **Resend** (grátis até 3.000/mês),
-implementar `SmtpMailDriver`. Destrava cadastro e recuperação de senha.
-
-**2. Arquivos** (um dia) — **Cloudflare R2** (grátis até 10 GB),
-implementar `S3StorageDriver`. Sem isso todo upload some no deploy
-seguinte.
-
-**3. Gente de verdade usando** (uma semana) — mais valioso que qualquer
-funcionalidade nova. É aqui que aparece o que ninguém previu.
-
-**4. Pagamento** (uma a duas semanas de código, mais a papelada)
-
-A sua tela de checkout promete **cartão, Pix e boleto**. O **Stripe não
-entrega isso no Brasil** — Pix é restrito e boleto saiu. Para cumprir o
-que a tela promete, o caminho é um adquirente brasileiro: **Mercado
-Pago**, **Asaas** ou **Pagar.me**.
-
-> **O que costuma estourar o prazo não é o código: é o CNPJ.** Todo
-> adquirente sério pede para liberar recebimento. Se você ainda não tem,
-> isso pode demorar mais que o resto junto.
->
-> Por isso: **não deixe o pagamento travar o lançamento.** Publique com
-> o plano gratuito liberado, deixe gente usar, e ligue a cobrança quando
-> a conta sair. Produto que ninguém usou ainda não sabe o preço que
-> vale.
-
-**5. Instalar na tela inicial** (meio dia) — `manifest.json` + service
-worker. Qualquer endereço `https://` pode virar app na tela de início;
-não precisa de loja nem de GitHub Pages.
-
----
-
-## Antes de divulgar o endereço
-
-- [ ] `admin@nexora.app` com senha trocada (ou apagado)
-- [ ] empresa de demonstração apagada
-- [ ] `AUTH_SECRET` de produção **diferente** do que você usou em teste
-- [ ] nenhuma chave dentro do código — só nas variáveis da Vercel
-- [ ] e-mail funcionando (senão ninguém recupera a conta)
-- [ ] política de privacidade e termos — **com pagamento vira obrigação**
-- [ ] entrar no link de um celular que nunca abriu o sistema
-
----
-
-## Quando der erro
-
-O log de deploy da Vercel diz a verdade, mas enterrada. Os três mais
-prováveis:
-
-| mensagem | o que é |
-|---|---|
-| `Variável de ambiente obrigatória ausente: DATABASE_URL` | faltou a variável, ou tem espaço sobrando |
-| `AUTH_SECRET inseguro em produção` | menos de 32 caracteres, ou ainda é o de exemplo |
-| `PrismaClientKnownRequestError` durante o build | o banco não responde, ou as tabelas não existem — reveja o Build Command do Passo 4a |
+**O e-mail é o mais urgente dos três.** Sem ele ninguém confirma conta
+nem recupera senha — quem esquecer a senha perde o acesso para sempre.
+Meio dia de trabalho com o **Resend** (grátis até 3.000 por mês).
